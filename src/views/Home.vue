@@ -49,18 +49,22 @@ export default {
       const ctx = tempcanvas.getContext('2d')
       tempcanvas.width = this.canvasup.width
       tempcanvas.height = this.canvasup.height
-      ctx.fillStyle="#000000";
+      // ctx.fillStyle="#000000";
       ctx.fillRect(0,0,tempcanvas.width,tempcanvas.height);
-      this.lines.forEach((line) =>{
-        this.drawLines(ctx, [line]);
-      })
-      const dataurl = this.canvaToDataURL(tempcanvas)
-      const blob = this.dataURLToBlob(dataurl)
-      const imgpath = this.blobToImagePath(blob)
-      a.href = imgpath;
-      a.download = Date.now()+'.png';
-      a.click();
-      window.URL.revokeObjectURL(imgpath);
+      // this.lines.forEach((line) =>{
+      //   this.drawLines(ctx, [line]);
+      // })
+      this.draw(ctx)
+      // const dataurl = this.canvaToDataURL(tempcanvas)
+      // const blob = this.dataURLToBlob(dataurl)
+      tempcanvas.toBlob((blob)=>{
+        const imgpath = this.blobToImagePath(blob)
+        a.href = imgpath;
+        a.download = Date.now()+'.jpg';
+        a.click();
+        window.URL.revokeObjectURL(imgpath);
+      },'image/jpeg',0.2)
+      
     },
     onMousedown(e) {
       this.lines.push({ pts: [], size: this.paintSize });
@@ -82,20 +86,20 @@ export default {
       const y = e.offsetY * r;
       const currLine = this.lines[this.lines.length - 1];
       currLine.pts.push({ x: x, y: y });
-      this.draw();
+      const ctx = this.canvasup.getContext("2d");
+      this.draw(ctx);
     },
-    draw() {
-      if (!this.canvasup) {
+    draw(ctx) {
+      if (!ctx) {
         return;
       }
-      const ctx = this.canvasup.getContext("2d");
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      // const currRender = this.renders[this.renders.length - 1];
-      // if (currRender?.src) {
-      //   ctx.drawImage(currRender, 0, 0);
-      // } else {
-      //   ctx.drawImage(this.original, 0, 0);
-      // }
+      const currRender = this.renders[this.renders.length - 1];
+      if (currRender?.src) {
+        ctx.drawImage(currRender, 0, 0);
+      } else {
+        ctx.drawImage(this.original, 0, 0);
+      }
       this.lines.forEach((line) =>{
         this.drawLines(ctx, [line]);
       })
