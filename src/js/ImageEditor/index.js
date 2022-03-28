@@ -92,8 +92,8 @@ export default class ImageEditor {
     const filters = {}
     let background = null
     if (this.historys.length && this.index !== -1) {
-      let current = this.historys[0]
-      while (current && current.index <= this.index) {
+      let current = this.historys[this.index]
+      while (current) {
         if (current.operate instanceof Background) {
           background = current
         } else if (current.operate instanceof Filter) {
@@ -110,17 +110,15 @@ export default class ImageEditor {
                   render: current.operate.render
                 }
               })
-            console.log(crop)
           } else {
             crop = current
-            console.log(crop)
           }
         } else if (current.operate instanceof Rotate) {
-          rotates.push(current)
+          rotates.unshift(current)
         } else {
-          renders.push(current)
+          renders.unshift(current)
         }
-        current = current.next
+        current = current.prev
       }
     }
 
