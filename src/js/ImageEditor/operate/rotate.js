@@ -1,27 +1,14 @@
-import { isCanvas,setTransform } from '../utils'
+import { isCanvas, setTransform, SIN, COS } from '../utils'
 export default class Rotate {
-  constructor(deg) {
+  constructor(deg, accumulative) {
     this.deg = deg
+    this.accumulative = accumulative
   }
-  render(target,w,h,deg) {
+  render(target, deg, w, h) {
     if (isCanvas(target)) {
-      if(Math.abs(deg) % 90 === 0) {
-       if(Math.abs(deg) % 180 === 0){
-        target.ctx.translate(target.canvas.height / 2, target.canvas.width / 2)
-        target.ctx.rotate((this.deg * Math.PI) / 180)
-        target.ctx.translate(-target.canvas.width / 2, -target.canvas.height / 2)
-       }else {
-        target.ctx.translate(target.canvas.width / 2, target.canvas.height / 2)
-        target.ctx.rotate((this.deg * Math.PI) / 180)
-        target.ctx.translate(-target.canvas.height / 2, -target.canvas.width / 2)
-       }
-      }else{
-        target.ctx.translate(target.canvas.width / 2, target.canvas.height / 2)
-        target.ctx.rotate((this.deg * Math.PI) / 180)
-        target.ctx.translate(-target.canvas.width / 2, -target.canvas.height / 2)
-      }
+      target.canvas.style.transform = `matrix(${COS(deg)},${SIN(deg)},${-1 * SIN(deg)},${COS(deg)},0,0)`
     } else {
-      target.style = setTransform(target.style.transform,'rotate',this.deg)
+      target.style = setTransform(target.style.transform, 'rotate', this.deg)
     }
   }
 }

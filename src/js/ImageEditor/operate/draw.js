@@ -1,6 +1,6 @@
 import { getPosition } from '../utils'
 export default class Drwa {
-  constructor(uuid, path, lineWidth, lineColor, dom, svg) {
+  constructor(uuid, path, lineWidth, lineColor, dom) {
     this.uuid = uuid
     this.path = path
     this.lineWidth = lineWidth

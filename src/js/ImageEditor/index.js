@@ -2,8 +2,12 @@ import Step from './step'
 import Background from './operate/background'
 import Filter from './operate/filter'
 import Rotate from './operate/rotate'
+import RotateCanvas from './operate/rotateCanvas'
 import Crop from './operate/crop'
 import Draw from './operate/draw'
+import Shape from './operate/shape'
+import Text from './operate/text'
+import Action from './action'
 import Canvas from './canvas'
 
 export default class ImageEditor {
@@ -33,11 +37,11 @@ export default class ImageEditor {
       return false
     }
     const current = this.historys[this.index]
-    if (current.operate instanceof Draw) {
-      current.disabled = true
-      if (current.selected) {
+    if (current.operate instanceof Draw || current.operate instanceof Text) {
+      current.operate.disabled = true
+      console.log(current)
+      if (current.operate.selected) {
         this.canvas.event._removeSelect()
-        current.selected = false
       }
     }
     if (!current.prev) {
@@ -58,8 +62,8 @@ export default class ImageEditor {
       if (!current.next) {
         return false
       }
-      if (current.operate instanceof Draw) {
-        current.disabled = false
+      if (current.operate instanceof Draw || current.operate instanceof Text) {
+        current.operate.disabled = false
       }
       this.index = current.next.index
     }
@@ -86,9 +90,10 @@ export default class ImageEditor {
     return this.historys[this.index]
   }
   render(template = false) {
-    const rotates = []
     let crop = null
     const renders = []
+    const rotates = []
+    const rotatesCanvas = []
     const filters = {}
     let background = null
     if (this.historys.length && this.index !== -1) {
@@ -115,6 +120,8 @@ export default class ImageEditor {
           }
         } else if (current.operate instanceof Rotate) {
           rotates.unshift(current)
+        } else if (current.operate instanceof RotateCanvas) {
+          rotatesCanvas.unshift(current)
         } else {
           renders.unshift(current)
         }
@@ -122,28 +129,46 @@ export default class ImageEditor {
       }
     }
 
-    this._render(template, rotates, crop, renders, filters, background)
+    this._render(template, rotates, rotatesCanvas, crop, renders, filters, background)
   }
-  _render(template, rotates, crop, renders, filters, background) {
+  async _render(template, rotates, rotatesCanvas, crop, renders, filters, background) {
+    this.canvas.resetCanvasImage()
     this.canvas.resetCanvasSize(this.canvas.image.width, this.canvas.image.height)
     this.canvas.clearDraw()
     if (crop) {
-      crop.operate.render(crop.target)
+      await crop.operate.render(crop.target)
     }
-    if (rotates && rotates.length) {
+    if (rotatesCanvas) {
       let deg = 0
-      for (let i = 0; i < rotates.length; i++) {
-        deg += rotates[i].operate.deg
+      if (crop) {
+        rotatesCanvas = rotatesCanvas.filter((item) => item.index > crop.index)
       }
-      this.canvas.rotate(deg)
+      if (rotatesCanvas.length) {
+        for (let i = 0; i < rotatesCanvas.length; i++) {
+          deg += Number(rotatesCanvas[i].operate.deg)
+        }
+        if (crop) {
+          this.canvas.rotate(deg, crop.operate.w, crop.operate.h)
+        } else {
+          this.canvas.rotate(deg)
+        }
+        rotatesCanvas[0].operate.render(rotatesCanvas[0].target, deg, this.canvas.canvas.width, this.canvas.canvas.height)
+      }
     }
-    if (rotates && rotates.length) {
-      let deg = 0
-      for (let i = 0; i < rotates.length; i++) {
-        deg += rotates[i].operate.deg
-        const size = this.canvas.calculateWidthAndHeightOfRotate(deg)
-        rotates[i].operate.render(rotates[i].target, size.width, size.height, deg)
+    let deg = 0
+    if (rotates) {
+      if (crop) {
+        rotates = rotates.filter((item) => item.index > crop.index)
       }
+
+      if (rotates.length) {
+        deg = Number(rotates[rotates.length - 1].operate.deg)
+        const size = this.canvas.calculateCanvasWidthAndHeightOfRotate(deg, this.canvas.canvas.width, this.canvas.canvas.height)
+        console.log(size.width, size.height)
+        this.canvas.setCanvasSize(size.width, size.height)
+        rotates[rotates.length - 1].operate.render(rotates[rotates.length - 1].target, deg)
+      }
+
     }
     if (background) {
       background.operate.render(background.target)
@@ -167,11 +192,20 @@ export default class ImageEditor {
     }
   }
   setAction(action, params) {
-    //TODO 删除
-    params = {
-      lineWidth: 20,
-      lineColor: '#333',
-    }
+    // //TODO 删除
+    // if (action === Action.SHAPE) {
+    //   params = {
+    //     lineWidth: 20,
+    //     lineColor: '#333',
+    //     type: Shape.CURVE
+    //   }
+    // } else if (action === Action.TEXT) {
+    //   params = {
+    //     fontSize: 20,
+    //     color: '#333'
+    //   }
+    // }
+
     this.canvas.event._removeEventListener()
     this.canvas.action = action
     this.canvas.event = this.canvas.events[this.canvas.action]

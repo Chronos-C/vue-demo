@@ -28,6 +28,7 @@ export const UUID = () => {
   });
 }
 export const getPosition = (path, lineWidth, scale) => {
+  console.log(lineWidth)
   if (!path || !path.length) {
     return false
   }
@@ -36,7 +37,9 @@ export const getPosition = (path, lineWidth, scale) => {
     miny = path[0].y * scale.y,
     maxy = path[0].y * scale.y,
     ox = path[0].x,
-    oy = path[0].y
+    oy = path[0].y,
+    omaxx = path[0].x,
+    omaxy = path[0].y
   path.forEach((item) => {
     if (item.x * scale.x < minx) {
       minx = item.x * scale.x
@@ -44,6 +47,7 @@ export const getPosition = (path, lineWidth, scale) => {
     }
     if (item.x * scale.x > maxx) {
       maxx = item.x * scale.x
+      omaxx = item.x
     }
     if (item.y * scale.y < miny) {
       miny = item.y * scale.y
@@ -51,6 +55,7 @@ export const getPosition = (path, lineWidth, scale) => {
     }
     if (item.y * scale.y > maxy) {
       maxy = item.y * scale.y
+      omaxy = item.y
     }
   })
   return {
@@ -60,8 +65,12 @@ export const getPosition = (path, lineWidth, scale) => {
     maxy,
     ox,
     oy,
+    omaxx,
+    omaxy,
     width: (maxx - minx) > lineWidth ? maxx - minx : lineWidth,
-    height: (maxy - miny) > lineWidth ? maxy - miny : lineWidth
+    height: (maxy - miny) > lineWidth ? maxy - miny : lineWidth,
+    ow: (omaxx - ox) > lineWidth ? omaxx - ox : lineWidth,
+    oh: (omaxy - oy) > lineWidth ? omaxy - oy : lineWidth,
   }
 }
 
@@ -90,4 +99,10 @@ export const isOnThePath = (currPoint, draw) => {
     }
   }
   return false
+}
+export const SIN = (deg) => {
+  return Math.sin(deg * Math.PI / 180)
+}
+export const COS = (deg) => {
+  return Math.cos(deg * Math.PI / 180)
 }

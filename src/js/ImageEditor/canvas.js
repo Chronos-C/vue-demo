@@ -1,6 +1,6 @@
 import Event from './event'
 import Action from './action'
-import { setTransform } from './utils'
+import { setTransform, SIN, COS } from './utils'
 
 export default class Canvas {
   constructor(dispatch, target, { maxWidth = 0, maxHeight = 0, lineWidth = 2, dropBorderWidth = 10, dropNodeWidth = 20, lineColor = '#fff' }) {
@@ -56,13 +56,14 @@ export default class Canvas {
     frame.style.width = '100%'
     frame.style.height = '100%'
     frame.style.overflow = 'hidden'
+    frame.style.position = 'relative'
     this.frame = frame
     const container = document.createElement('div')
     container.setAttribute('data-tag', 'container')
-    container.style.position = 'relative'
     container.style.userSelect = 'none'
     container.style.width = '100%'
     container.style.height = '100%'
+    container.style.overflow = 'hidden'
     if (this.maxWidth) {
       container.style.maxWidth = this.maxWidth + 'px'
     }
@@ -90,9 +91,12 @@ export default class Canvas {
     const shapes = document.createElement('div')
     shapes.setAttribute('class', 'shapes')
     shapes.setAttribute('data-tag', 'shapes')
+    shapes.style.overflow = 'hidden'
     shapes.style.position = 'absolute'
     shapes.style.top = '0'
     shapes.style.left = '0'
+    shapes.style.width = '100%'
+    shapes.style.height = '100%'
     this.shapesElement = shapes
     container.appendChild(this.initSelection())
     container.appendChild(this.initHover())
@@ -175,6 +179,12 @@ export default class Canvas {
           cursor: 'se-resize',
         }
       },
+      {
+        type: 'rotate',
+        css: {
+          bottom: `-${this.dropNodeWidth * 2}px`,
+        }
+      },
     ]
     for (let i = 0; i < points.length; i++) {
       const point = document.createElement('div')
@@ -184,7 +194,20 @@ export default class Canvas {
       point.style.height = this.dropNodeWidth + 'px'
       point.style.background = '#6ccfff'
       for (let css in points[i].css) {
-        point.style[css] = points[i].css[css]
+        if (css === 'cursor') {
+          if (points[i].type === 't-l' || points[i].type === 'b-r') {
+            point.style[css] = `url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACP0lEQVQ4jX2Tv0tbURTHPzdJX+ujRmIXUZIXKIFgtJNkEIvSPyFDFuemOCmOGYqjuHQzbaVDB8eOjnXoUtKMGaTBIVZU5Cn+6CMNpO99u3jtq7Q98IV7uefLOfd7vsdIIhYJwMTu9jHiH5GInRtACPyMIbxB405urISEpJYkRVGkMAxvEUWRoihSLBp3eBhJZaDZarVYXl7m8vKS4eFhRkZGcF2XxcVFKpUKiUQCYwxA0hgT2a8ngC5APp8HYG9vD8dxcF2X0dFRrq6uCMPQkl8bY/7QIwU8Btjf32d6ehrf9/F9n2q1Sq1Ww3EcS34HvJL0DPgCBLaDhwBBEHB4eMjCwgKZTIbNzU3q9TqdTscW84CvwEfgO/DeijEhSUdHRxobG9P6+rqCIFC1WlU2m9Xq6qoGg4EkqdPpaHd3V0EQWFEfJdfW1n4AL13XpVAokEwmmZmZoVQqcXJyws7ODufn53ieR6/XY2Njg3Q6TbFYBPhsJKWAQRiGSCKVSt0KdHp6ysrKCu12m1KpRDabZXx8nHK5zNzcHMBTO883sVm/lVSQ9EGSms2mlpaWND8/L0Czs7Pqdrs2N2/d9QK4BzjGmBpQByq+73N2dkYul8PzPCYnJ+l2uxwcHPwW1joq5jBXknq9nra3t+V5ngANDQ0pnU6rUChoa2vLdvDcWPLNrJGUAEJJ9Pt9Li4uuL6+pt/vc3x8TC6XY2pqCmAAPLnt4A4a+n98klS0u/DXJbsx2QMgA6SB+8AE8A1o26RfWvKP8ADq6QQAAAAASUVORK5CYII='),${points[i].css[css]}`
+          } else if (points[i].type === 't-r' || points[i].type === 'b-l') {
+            point.style[css] = `url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACQUlEQVQ4jX2Tv0vbURTFPy+pIuoQCSikJhGa1IB2k6BiowScg4u4Sagtzg5d/QsEEYqUgKWDi9DRLbgUBMmo1iAO9UfESLfGmNbv950ueUGLeuBxH++9e+7h3XuMJJ5BGHgL/AIugDjwGvgOlAGQ9NT6qqfxV1JKEsYpMMa0ykrqBn7f3NxQLBYJh8NEo1FOT085Pj5mYWGBpopMq2IzMdCMWUna2dnRzMyMVlZWND4+rkgkomQyqf39fafkTeBe1XXAb8YLgP7+fpaXl7m8vGR3d5dQKES1WuXs7MylxRxBAFhsKlkEPgLFZDJJV1cX5+fnTE5OMjIywt3dHZFIxBFUXjQ3nwCstfi+T3t7+zsAz/PY2Njg8PCQTCZDLBbj9vaWjo4OR/AHSQFJstZqa2tLhUJB1lqVy2UtLS0pGo1qbm5Oe3t72t7eVjweV6VScX/w8gFBLpdTPp9Xo9FoJc/Pz+vq6kqSdH19rc3NTdXrdUfQiaSgJPm+r+npaeVyOa2trSmVSml2dlYHBwfu8TdJqtfrsta6s8ADgnQ6rYmJCQ0ODmp0dFS1Wk2+77vHSUlf7g3TuhukIOBZaxkeHubo6IhEIsHU1BSJRILe3l7y+TxAwRjzQVIn0ACsa5/cJIZCIcbGxshms1QqFVZXV+np6cHzPID3ktqMMXVjjHVtcKO8DiyWSiUGBgY4OTmhVqsxNDREX18fAMFgEKDNGOM5D/1vptIz5pGkz3rEdC0zNZEGfgKvgG7gB1Bt3nk8gn/ALOqwNW9xuwAAAABJRU5ErkJggg=='),${points[i].css[css]}`
+          } else if (points[i].type === 't-c' || points[i].type === 'b-c') {
+            point.style[css] = `url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAQCAYAAAAiYZ4HAAABFElEQVQokXWSMW6DQBBFnwiXcYNcuLWypHVlGrgAlVNR0bGcgIKWK/gMrK+QgpyAW1j6aViyhuRLU+z+92E1M0giqJv2uoVMCF88URSFiqIIQ5dt4Oiduq4FCFBd12Ho6AOxpEmS+r4XIGOMjDEC1Pe9D0ySYiSlkjSOowA1TbMGmqYRoHEcfSiNCXS/38myjDRNAbDWkiQJLwqf5OX/sNEkKY6AJ5AAH8CDvR6LlwDPKDDe/oB3XrzUF3D4B35f6htIIuAMHJxzWGt3tLUW5xzLB88vXWrblnme13NZlgzDgDHmFwq71HXdbnBd1+0Gh6STv62qal2NqqrCtp62y3f1Tp7nyvM8hK/b5fP1uZ3WcrcyP/v/iukOlDsjAAAAAElFTkSuQmCC'),${points[i].css[css]}`
+          } else {
+            point.style[css] = `url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAPCAYAAADtc08vAAACVUlEQVQokW2TPUsjURiFn0zGSZDAFonMKhjYwlgJkt1CsNHKxkIE2T9gYeMPsdpy1WZhhWUlEtFOWLCykRUlokXiB9okk4wmKIkOyczZYhONwQMv3Hvee99b3OeEJPGOEkCjXR2FAQEfgOqLK6m7Pkna1Kt+tP1VvdUvSeE3j0vKdrqu66rRaHS23yXJ930FQaBqtdo9aDXcvvwZ+FYqldje3qZcLpNMJolEIgBfJHFzc8PW1hYPDw8MDAxgWRahUOiLIek38BdgZ2eH3d1dGo0G4XCYVqsFQLPZ5Pz8nLOzM46Pjzk4OODx8REAE/h6f3/PxsYGmUyGeDxOrVbj9PSURCKB7/u4rkutViMSibC/v8/d3R3Dw8Mkk0nMp6cnstksKysrFItFpqamuLi4IJfLUSwWCYKAkZERLi8vcRyH6+trCoUC5XKZ5eXl/wPq9TqxWIxoNEq9Xufk5ITn52fi8Tj9/f0cHR0RjUaxbRvHcbi9vSUIAmzbxjQMg3Q6zcLCAoeHh1iWxfj4ODMzM9i2zdXVFaZpYlkWmUyGXC7H3NwcS0tLDA4OYsZiMSYmJrBtm6GhISqVCrOzs4yNjWEYBqOjowDs7e1RKBSYnJxkcXGRdDqNZVmYpmkCkEql8DyPfD6P53kv3wXgeR6maTI/P8/09DSpVKqDz08k9Un6KEmlUkn5fF6O48j3fUlSEATyfV+VSkWu63YA+iMp1k1hnyQ1m80eYl8RbrVaneXmm9R05WC9fWBdkt1hXZIhaa3dW+vJDqGeNPYBzffi2Yau1Wv+AzdlzzwbCNWGAAAAAElFTkSuQmCC'),${points[i].css[css]}`
+          }
+        } else {
+          point.style[css] = points[i].css[css]
+        }
+
       }
       selected.appendChild(point)
     }
@@ -206,6 +229,14 @@ export default class Canvas {
   }
   setContainerScale(scale) {
     this.container.style.transform = `scale(${scale})`
+  }
+  setCanvasSize(w, h) {
+    this.canvas.width = w
+    this.canvas.height = h
+    this.canvas.style.width = '100%'
+    this.canvas.style.height = '100%'
+    this.canvas.style.maxWidth = w + 'px'
+    this.canvas.style.maxHeight = h + 'px'
   }
   resetCanvasSize(w, h) {
     this.canvas.width = w
@@ -248,40 +279,112 @@ export default class Canvas {
     // this.originY = -this.image.height / 2 + this.canvas.height / 2
     this.dispatch._render()
   }
-  calculateWidthAndHeightOfRotate(deg) {
-    if (deg % 90 === 0) {
-      if (deg % 180 === 0) {
-        return { width: this.canvas.width, height: this.canvas.height }
+  calculateCanvasWidthAndHeightOfRotate(deg, w, h) {
+    deg %= 90
+    const aspectRatio = w / h
+    let width, height, centerRectangleWidth, centerRectangleHeight, offsetX, offsetY
+    if (deg % 90) {
+      if (deg > 0) {
+        console.log(SIN(deg) * w, COS(deg) * h)
+        width = SIN(deg) * w + COS(deg) * h
+        centerRectangleWidth = width
+        centerRectangleHeight = SIN(deg) * h + COS(deg) * w
       } else {
-        return { width: this.canvas.height, height: this.canvas.width }
+        width = COS(deg) * w + SIN(deg) * h
+        centerRectangleWidth = width
+        centerRectangleHeight = COS(deg) * h + SIN(deg) * w
+      }
+      height = width / aspectRatio
+      offsetX = COS(deg) * ((height - centerRectangleHeight) / 2)
+      offsetY = SIN(deg) * ((height - centerRectangleHeight) / 2)
+      return {
+        width,
+        height
+      }
+    } else if (deg === 0) {
+      return {
+        width: w,
+        height: h,
       }
     } else {
       return {
-        width: Math.sin(Math.PI / 180 * Math.abs(deg)) * this.canvas.width + Math.cos(Math.PI / 180 * (90 - Math.abs(deg))) * this.canvas.height,
-        height: Math.sin(Math.PI / 180 * Math.abs(deg)) * this.canvas.height + Math.cos(Math.PI / 180 * (90 - Math.abs(deg))) * this.canvas.width,
+        width: h,
+        height: h / aspectRatio
       }
     }
   }
-  rotate(deg) {
-    const size = this.calculateWidthAndHeightOfRotate(deg)
+  calculateWidthAndHeightOfRotate(deg, w = this.image.width, h = this.image.height) {
+    deg %= 360
+    if (deg % 90 === 0) {
+      if (deg % 180 === 0) {
+        return { width: w, height: h }
+      } else {
+        return { width: h, height: w }
+      }
+    } else {
+      if (deg > 0) {
+        if (deg < 90 || (deg > 180 && deg < 270)) {
+          return {
+            width: Math.sin(Math.PI / 180 * (Math.abs(deg) % 90)) * h + Math.cos(Math.PI / 180 * Math.abs(deg % 90)) * w,
+            height: Math.sin(Math.PI / 180 * (Math.abs(deg) % 90)) * w + Math.cos(Math.PI / 180 * Math.abs(deg % 90)) * h,
+          }
+        } else {
+          return {
+            width: Math.sin(Math.PI / 180 * (Math.abs(deg) % 90)) * w + Math.cos(Math.PI / 180 * Math.abs(deg % 90)) * h,
+            height: Math.sin(Math.PI / 180 * (Math.abs(deg) % 90)) * h + Math.cos(Math.PI / 180 * Math.abs(deg % 90)) * w,
+          }
+        }
+      } else {
+        if (Math.abs(deg) < 90 || (Math.abs(deg) > 180 && Math.abs(deg) < 270)) {
+          return {
+            width: Math.sin(Math.PI / 180 * (Math.abs(deg) % 90)) * h + Math.cos(Math.PI / 180 * Math.abs(deg % 90)) * w,
+            height: Math.sin(Math.PI / 180 * (Math.abs(deg) % 90)) * w + Math.cos(Math.PI / 180 * Math.abs(deg % 90)) * h,
+          }
+        } else {
+          return {
+            width: Math.sin(Math.PI / 180 * (Math.abs(deg) % 90)) * w + Math.cos(Math.PI / 180 * Math.abs(deg % 90)) * h,
+            height: Math.sin(Math.PI / 180 * (Math.abs(deg) % 90)) * h + Math.cos(Math.PI / 180 * Math.abs(deg % 90)) * w,
+          }
+        }
+      }
+    }
+  }
+  rotate(deg, w, h) {
+    const size = this.calculateWidthAndHeightOfRotate(deg, w, h)
     this.resetCanvasSize(size.width, size.height)
+  }
+  resetCanvasImage() {
+    this.image = this.originImage
   }
   offsetImage(x, y) {
     const transform = setTransform(this.upperCanvas.style.transform, 'translate', `${x}px,${y}px`)
     console.log(transform)
     this.upperCanvas.style.transform = transform
     this.canvas.style.transform = transform
+    this.shapesElement.style.transform = transform
+  }
+  setImage(imgData) {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      canvas.width = imgData.width
+      canvas.height = imgData.height
+      ctx.putImageData(imgData, 0, 0)
+      const image = new Image()
+      image.src = canvas.toDataURL('image/png')
+      image.onload = () => {
+        console.log('setImage')
+        this.image = image
+        resolve()
+      }
+    })
+
   }
   _drawImg(crop) {
     if (!this.image) {
       return
     }
-    if (crop) {
-      this.ctx.drawImage(this.image, crop.operate.x, crop.operate.y, crop.operate.w, crop.operate.h, 0, 0, crop.operate.w, crop.operate.h)
-    } else {
-      this.ctx.drawImage(this.image, 0, 0)
-    }
-
+    this.ctx.drawImage(this.image, 0, 0)
   }
   clearDraw() {
     this.ctx.setTransform(1, 0, 0, 1, 0, 0)
