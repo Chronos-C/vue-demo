@@ -6,7 +6,10 @@ export default class Rotate {
   }
   render(target, deg, w, h) {
     if (isCanvas(target)) {
+      target.canvas.style.transformOrigin = '0 0'
       target.canvas.style.transform = `matrix(${COS(deg)},${SIN(deg)},${-1 * SIN(deg)},${COS(deg)},0,0)`
+      target.shapesElement.style.transformOrigin = '0 0'
+      target.shapesElement.style.transform = `matrix(${COS(deg)},${SIN(deg)},${-1 * SIN(deg)},${COS(deg)},0,0)`
     } else {
       target.style = setTransform(target.style.transform, 'rotate', this.deg)
     }

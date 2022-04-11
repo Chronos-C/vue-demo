@@ -1,6 +1,6 @@
 import { getPosition } from '../utils'
 export default class Shape {
-  constructor({ x, y, w, h, type, fillColor = 'none', borderWidth = 0, borderColor = '#333', opacity = 1, path, uuid, lineWidth = 5, lineColor = '#333', lineStyle = 'solid', dom }) {
+  constructor({ x, y, w, h, type, fillColor = 'none', borderWidth = 0, borderColor = '#333', opacity = 1, path, uuid, lineWidth = 5, lineColor = '#333', lineStyle = 'solid', dom, deg = 0, canvasWidth, canvasHeight }) {
     this.uuid = uuid
     this.dom = dom
     this.x = x
@@ -32,6 +32,9 @@ export default class Shape {
     this.disabled = false
     this.selected = false
     this.rotate = 0
+    this.deg = deg
+    this.canvasWidth = canvasWidth
+    this.canvasHeight = canvasHeight
   }
   render(target) {
     // this.destory()

@@ -14,6 +14,7 @@ export default class Canvas {
     this.selected = null
     this.hover = null
     this.lastScale = 1
+    this.canvasDeg = 0
     this.deg = 0
     this.lineWidth = lineWidth
     this.lineColor = lineColor
@@ -55,7 +56,7 @@ export default class Canvas {
     frame.style.userSelect = 'none'
     frame.style.width = '100%'
     frame.style.height = '100%'
-    frame.style.overflow = 'hidden'
+    // frame.style.overflow = 'hidden'
     frame.style.position = 'relative'
     this.frame = frame
     const container = document.createElement('div')
@@ -63,7 +64,7 @@ export default class Canvas {
     container.style.userSelect = 'none'
     container.style.width = '100%'
     container.style.height = '100%'
-    container.style.overflow = 'hidden'
+    // container.style.overflow = 'hidden'
     if (this.maxWidth) {
       container.style.maxWidth = this.maxWidth + 'px'
     }
@@ -75,9 +76,9 @@ export default class Canvas {
     const lower = document.createElement('canvas')
     lower.setAttribute('class', 'lower-canvas')
     lower.setAttribute('data-tag', 'lower')
-    // lower.style.position = 'absolute'
-    // lower.style.top = '0'
-    // lower.style.left = '0'
+    lower.style.position = 'absolute'
+    lower.style.top = '0'
+    lower.style.left = '0'
     this.canvas = lower
     this.ctx = lower.getContext('2d')
     const upper = document.createElement('canvas')
@@ -86,12 +87,13 @@ export default class Canvas {
     upper.style.position = 'absolute'
     upper.style.top = '0'
     upper.style.left = '0'
+    upper.style.boxShadow = '0 0 0 10000px rgb(238 242 248 / 90%)'
     this.upperCanvas = upper
     this.upperCtx = upper.getContext('2d')
     const shapes = document.createElement('div')
     shapes.setAttribute('class', 'shapes')
     shapes.setAttribute('data-tag', 'shapes')
-    shapes.style.overflow = 'hidden'
+    // shapes.style.overflow = 'hidden'
     shapes.style.position = 'absolute'
     shapes.style.top = '0'
     shapes.style.left = '0'
@@ -230,13 +232,21 @@ export default class Canvas {
   setContainerScale(scale) {
     this.container.style.transform = `scale(${scale})`
   }
-  setCanvasSize(w, h) {
+  setCanvasSize(w, h, x = 0, y = 0) {
     this.canvas.width = w
     this.canvas.height = h
-    this.canvas.style.width = '100%'
-    this.canvas.style.height = '100%'
-    this.canvas.style.maxWidth = w + 'px'
-    this.canvas.style.maxHeight = h + 'px'
+    // this.canvas.style.width = '100%'
+    // this.canvas.style.height = '100%'
+    // this.canvas.style.maxWidth = w + 'px'
+    // this.canvas.style.maxHeight = h + 'px'
+    this.canvas.style.width = w + 'px'
+    this.canvas.style.height = h + 'px'
+    this.canvas.style.top = y + 'px'
+    this.canvas.style.left = x + 'px'
+    this.shapesElement.style.width = w + 'px'
+    this.shapesElement.style.height = h + 'px'
+    this.shapesElement.style.top = y + 'px'
+    this.shapesElement.style.left = x + 'px'
   }
   resetCanvasSize(w, h) {
     this.canvas.width = w
@@ -247,18 +257,25 @@ export default class Canvas {
     this.frame.style.height = '100%'
     this.frame.style.maxWidth = w + 'px'
     this.frame.style.maxHeight = h + 'px'
-    this.container.style.width = '100%'
-    this.container.style.height = '100%'
-    this.container.style.maxWidth = w + 'px'
-    this.container.style.maxHeight = h + 'px'
-    this.canvas.style.width = '100%'
-    this.canvas.style.height = '100%'
-    this.canvas.style.maxWidth = w + 'px'
-    this.canvas.style.maxHeight = h + 'px'
+    // this.container.style.width = '100%'
+    // this.container.style.height = '100%'
+    // this.container.style.maxWidth = w + 'px'
+    // this.container.style.maxHeight = h + 'px'
+    // this.canvas.style.width = '100%'
+    // this.canvas.style.height = '100%'
+    // this.canvas.style.maxWidth = w + 'px'
+    // this.canvas.style.maxHeight = h + 'px'
+    this.container.style.width = w + 'px'
+    this.container.style.height = h + 'px'
+    this.canvas.style.width = w + 'px'
+    this.canvas.style.height = h + 'px'
+    this.canvas.style.top = 0 + 'px'
+    this.canvas.style.left = 0 + 'px'
     this.upperCanvas.style.width = '100%'
     this.upperCanvas.style.height = '100%'
     this.upperCanvas.style.maxWidth = w + 'px'
     this.upperCanvas.style.maxHeight = h + 'px'
+
   }
   drawImg(image) {
     this.image = image
@@ -267,12 +284,14 @@ export default class Canvas {
     this.canvas.height = this.image.height
     this.upperCanvas.width = this.image.width
     this.upperCanvas.height = this.image.height
-    this.canvas.style.width = '100%'
-    this.canvas.style.height = '100%'
+    // this.canvas.style.width = '100%'
+    // this.canvas.style.height = '100%'
+    // this.canvas.style.maxWidth = this.container.clientWidth + 'px'
+    // this.canvas.style.maxHeight = this.container.clientHeight + 'px'
+    this.canvas.style.width = this.container.clientWidth + 'px'
+    this.canvas.style.height = this.container.clientHeight + 'px'
     this.upperCanvas.style.width = '100%'
     this.upperCanvas.style.height = '100%'
-    this.canvas.style.maxWidth = this.container.clientWidth + 'px'
-    this.canvas.style.maxHeight = this.container.clientHeight + 'px'
     this.upperCanvas.style.maxWidth = this.container.clientWidth + 'px'
     this.upperCanvas.style.maxHeight = this.container.clientHeight + 'px'
     // this.originX = -this.image.width / 2 + this.canvas.width / 2
@@ -280,37 +299,134 @@ export default class Canvas {
     this.dispatch._render()
   }
   calculateCanvasWidthAndHeightOfRotate(deg, w, h) {
-    deg %= 90
     const aspectRatio = w / h
-    let width, height, centerRectangleWidth, centerRectangleHeight, offsetX, offsetY
+    let odeg = deg
+    deg %= 90
     if (deg % 90) {
       if (deg > 0) {
-        console.log(SIN(deg) * w, COS(deg) * h)
-        width = SIN(deg) * w + COS(deg) * h
-        centerRectangleWidth = width
-        centerRectangleHeight = SIN(deg) * h + COS(deg) * w
+        if (w > h) {
+          let a1 = COS(deg) * w
+          let b2 = SIN(deg) * h
+          let rw = a1 + b2
+          let a2 = COS(deg) * h
+          let b5 = SIN(deg) * w
+          let rh = a2 + b5
+          let w2 = aspectRatio * rh
+          let b1 = SIN(deg) * w
+          let c3 = b1 / COS(deg)
+          let b3 = SIN(deg) * c3
+          let rw2 = (w2 - rw) / 2
+          let c4 = rw2 - b3
+          let a4 = COS(deg) * c4
+          let b4 = SIN(deg) * c4
+          return {
+            width: w2,
+            height: rh,
+            x: -1 * a4,
+            y: -1 * (b4 + c3)
+          }
+        } else {
+          let a2 = COS(deg) * w
+          let b1 = SIN(deg) * h
+          let b2 = SIN(deg) * w
+          let a1 = COS(deg) * h
+          let rw = a2 + b1
+          let rh = a1 + b2
+          let h2 = rw / aspectRatio
+          let rw2 = (h2 - rh) / 2
+          let c3 = rw2 + b2
+          let a3 = COS(deg) * c3
+          let b3 = SIN(deg) * c3
+          return {
+            width: rw,
+            height: h2,
+            x: b3,
+            y: -1 * a3
+          }
+        }
+
       } else {
-        width = COS(deg) * w + SIN(deg) * h
-        centerRectangleWidth = width
-        centerRectangleHeight = COS(deg) * h + SIN(deg) * w
+        deg = Math.abs(deg)
+        if (w > h) {
+          let a1 = COS(deg) * w
+          let b2 = SIN(deg) * h
+          let rw = b2 + a1
+          let b1 = SIN(deg) * w
+          let a4 = COS(deg) * h
+          let rh = b1 + a4
+          let w2 = aspectRatio * rh
+          let rw2 = (w2 - rw) / 2
+          let c3 = rw2 + b2
+          let a3 = COS(deg) * c3
+          let b3 = SIN(deg) * c3
+          return {
+            width: w2,
+            height: rh,
+            x: -1 * a3,
+            y: b3
+          }
+        } else {
+          let b1 = SIN(deg) * h
+          let a4 = COS(deg) * w
+          let rw = b1 + a4
+          let a1 = COS(deg) * h
+          let b5 = SIN(deg) * w
+          let rh = a1 + b5
+          let h2 = rw / aspectRatio
+          let c2 = b1 / COS(deg)
+          let b2 = SIN(deg) * c2
+          let c3 = (h2 - rh) / 2 - b2
+          let a3 = COS(deg) * c3
+          let b3 = SIN(deg) * c3
+          return {
+            width: rw,
+            height: h2,
+            x: -1 * (b3 + c2),
+            y: -1 * a3
+          }
+        }
       }
-      height = width / aspectRatio
-      offsetX = COS(deg) * ((height - centerRectangleHeight) / 2)
-      offsetY = SIN(deg) * ((height - centerRectangleHeight) / 2)
-      return {
-        width,
-        height
-      }
-    } else if (deg === 0) {
+
+    } else if (odeg === 0) {
       return {
         width: w,
         height: h,
       }
     } else {
-      return {
-        width: h,
-        height: h / aspectRatio
+      if (odeg > 0) {
+        if (w > h) {
+          return {
+            width: w * aspectRatio,
+            height: w,
+            x: w,
+            y: -1 * (w * aspectRatio / 2 - h / 2)
+          }
+        } else {
+          return {
+            width: h,
+            height: h / aspectRatio,
+            x: h / aspectRatio / 2 + w / 2,
+            y: 0
+          }
+        }
+      } else {
+        if (w > h) {
+          return {
+            width: w * aspectRatio,
+            height: w,
+            x: 0,
+            y: w * aspectRatio / 2 + h / 2
+          }
+        } else {
+          return {
+            width: h,
+            height: h / aspectRatio,
+            x: -1 * (h / aspectRatio / 2 - w / 2),
+            y: h
+          }
+        }
       }
+
     }
   }
   calculateWidthAndHeightOfRotate(deg, w = this.image.width, h = this.image.height) {
@@ -380,11 +496,18 @@ export default class Canvas {
     })
 
   }
-  _drawImg(crop) {
+  _drawImg(crop, deg) {
     if (!this.image) {
       return
     }
-    this.ctx.drawImage(this.image, 0, 0)
+    if (deg === 0 || deg % 180 === 0) {
+      this.ctx.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height)
+    } else if (deg % 90 === 0) {
+      this.ctx.drawImage(this.image, 0, 0, this.canvas.height, this.canvas.width)
+    } else {
+      this.ctx.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height)
+    }
+
   }
   clearDraw() {
     this.ctx.setTransform(1, 0, 0, 1, 0, 0)

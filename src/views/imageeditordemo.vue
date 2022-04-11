@@ -9,8 +9,8 @@
       rotate
       <input
         type="range"
-        :min="-360"
-        :max="360"
+        :min="-90"
+        :max="90"
         v-model="rotate"
         @input="onRotate(rotate, false)"
         @change="onRotate(rotate, false)"
@@ -92,7 +92,9 @@
         style=""
       />
     </div>
-    <div id="image-editor"></div>
+    <div class="image-editor-box">
+      <div id="image-editor"></div>
+    </div>
     <div class="father">
       <div class="child">
         <div class="grandchild"></div>
@@ -334,5 +336,13 @@ export default {
 }
 .delline {
   text-decoration: line-through;
+}
+.image-editor-box {
+  width: 100%;
+  padding: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
 }
 </style>

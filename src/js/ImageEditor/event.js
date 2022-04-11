@@ -925,6 +925,9 @@ export default class Event {
               lineColor: this.canvas.actionParams.lineColor,
               dom: canvas,
               type: this.canvas.actionParams.type,
+              deg: this.canvas.deg + this.canvas.canvasDeg,
+              canvasWidth: this.canvas.canvas.width,
+              canvasHeight: this.canvas.canvas.height,
             })
             let { x, y } = this._getOffsetToContainer(e)
             path.push({ x, y })
@@ -1010,6 +1013,9 @@ export default class Event {
               fillColor: this.canvas.actionParams.fillColor,
               dom: canvas,
               type: this.canvas.actionParams.type,
+              deg: this.canvas.deg + this.canvas.canvasDeg,
+              canvasWidth: this.canvas.canvas.width,
+              canvasHeight: this.canvas.canvas.height,
             })
             let { x, y } = this._getOffsetToContainer(e), w = 0, h = 0
             this._registerEvent('mousemove', (e) => {

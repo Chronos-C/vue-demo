@@ -138,25 +138,26 @@ export default class ImageEditor {
     if (crop) {
       await crop.operate.render(crop.target)
     }
+    let canvasDeg = 0
     if (rotatesCanvas) {
-      let deg = 0
       if (crop) {
         rotatesCanvas = rotatesCanvas.filter((item) => item.index > crop.index)
       }
       if (rotatesCanvas.length) {
         for (let i = 0; i < rotatesCanvas.length; i++) {
-          deg += Number(rotatesCanvas[i].operate.deg)
+          canvasDeg += Number(rotatesCanvas[i].operate.deg)
         }
         if (crop) {
-          this.canvas.rotate(deg, crop.operate.w, crop.operate.h)
+          this.canvas.rotate(canvasDeg, crop.operate.w, crop.operate.h)
         } else {
-          this.canvas.rotate(deg)
+          this.canvas.rotate(canvasDeg)
         }
-        rotatesCanvas[0].operate.render(rotatesCanvas[0].target, deg, this.canvas.canvas.width, this.canvas.canvas.height)
+        this.canvas.canvasDeg = canvasDeg
       }
     }
-    let deg = 0
+
     if (rotates) {
+      let deg = 0
       if (crop) {
         rotates = rotates.filter((item) => item.index > crop.index)
       }
@@ -164,11 +165,14 @@ export default class ImageEditor {
       if (rotates.length) {
         deg = Number(rotates[rotates.length - 1].operate.deg)
         const size = this.canvas.calculateCanvasWidthAndHeightOfRotate(deg, this.canvas.canvas.width, this.canvas.canvas.height)
-        console.log(size.width, size.height)
-        this.canvas.setCanvasSize(size.width, size.height)
+        console.log(size.width, size.height, size.x, size.y,)
+        this.canvas.setCanvasSize(size.width, size.height, size.x, size.y)
         rotates[rotates.length - 1].operate.render(rotates[rotates.length - 1].target, deg)
+        this.canvas.deg = deg
       }
-
+    }
+    if (rotatesCanvas && rotatesCanvas.length) {
+      rotatesCanvas[0].operate.render(rotatesCanvas[0].target, canvasDeg, this.canvas.canvas.width, this.canvas.canvas.height)
     }
     if (background) {
       background.operate.render(background.target)
@@ -179,7 +183,7 @@ export default class ImageEditor {
         renders[i].operate.render(renders[i].target)
       }
     }
-    this.canvas._drawImg(crop)
+    this.canvas._drawImg(crop, canvasDeg)
     if (filters && Object.keys(filters).length) {
       const keys = Object.keys(filters)
       filters[keys[0]].operate.render(filters[keys[0]].target, filters, () => {
